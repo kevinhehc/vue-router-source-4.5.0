@@ -44,37 +44,47 @@ import {
   RouteMap,
 } from './typed-routes'
 
+// 控制路由行为（导航目标、是否 replace）
 export interface RouterLinkOptions {
   /**
    * Route Location the link should navigate to when clicked on.
    */
+  // 必填，跳转目标。支持字符串、对象等形式，如：
+  // to="/about"
+  // to="{ name: 'User', params: { id: 1 } }"
   to: RouteLocationRaw
   /**
    * Calls `router.replace` instead of `router.push`.
    */
+  // 如果为 true，使用 router.replace() 而不是 push()，即不会新增历史记录
   replace?: boolean
   // TODO: refactor using extra options allowed in router.push. Needs RFC
 }
 
+// 除路由行为外，控制 DOM、样式、可访问性等
 export interface RouterLinkProps extends RouterLinkOptions {
   /**
    * Whether RouterLink should not wrap its content in an `a` tag. Useful when
    * using `v-slot` to create a custom RouterLink
    */
+  // 是否禁用默认的 <a> 标签包装，常用于插槽自定义
   custom?: boolean
   /**
    * Class to apply when the link is active
    */
+  // 链接激活时应用的 CSS 类（模糊匹配）
   activeClass?: string
   /**
    * Class to apply when the link is exact active
    */
+  // 路由完全匹配时的 CSS 类
   exactActiveClass?: string
   /**
    * Value passed to the attribute `aria-current` when the link is exact active.
    *
    * @defaultValue `'page'`
    */
+  // 控制 aria-current 属性的值（默认 'page'，用于辅助技术识别当前项）
   ariaCurrentValue?:
     | 'page'
     | 'step'
@@ -87,6 +97,7 @@ export interface RouterLinkProps extends RouterLinkOptions {
   /**
    * Pass the returned promise of `router.push()` to `document.startViewTransition()` if supported.
    */
+  // 实验性特性，是否调用 document.startViewTransition() 来优化页面切换动画
   viewTransition?: boolean
 }
 
@@ -94,6 +105,12 @@ export interface RouterLinkProps extends RouterLinkOptions {
  * Context passed from router-link components to devtools.
  * @internal
  */
+// 这是 Vue Devtools 使用的调试上下文结构，用于展示：
+// 当前 link 指向的解析后路由信息
+// 是否处于激活状态
+// 是否完全匹配当前路由
+// 是否解析失败
+// Vue Devtools 可能会展示你点击了哪个 <router-link>，它是否激活，是否跳转失败等。
 export interface UseLinkDevtoolsContext {
   route: RouteLocationResolved
   isActive: boolean
@@ -104,7 +121,18 @@ export interface UseLinkDevtoolsContext {
 /**
  * Options passed to {@link useLink}.
  */
+// useLink() 是 Vue Router 公开的组合式函数，提供 <RouterLink> 所有导航能力，包括：
+// 解析 to → route
+// 计算 href
+// 判断是否激活
+// 提供 navigate() 方法用于程序式跳转
+// 你可以用它手动实现一个类似 <router-link> 的组件，或扩展其行为
 export interface UseLinkOptions<Name extends keyof RouteMap = keyof RouteMap> {
+  // 字段解释：
+  // 字段	          类型	           说明
+  // to	            `string	       object
+  // replace	      `boolean	     ref<boolean>`
+  // viewTransition	`boolean	     是否传递 promise 给 document.startViewTransition()（渐变支持）
   to: MaybeRef<
     | RouteLocationAsString
     | RouteLocationAsRelativeTyped<RouteMap, Name>
@@ -125,6 +153,13 @@ export interface UseLinkOptions<Name extends keyof RouteMap = keyof RouteMap> {
  * @internal
  */
 export interface UseLinkReturn<Name extends keyof RouteMap = keyof RouteMap> {
+  // 返回值说明：
+  // 字段	          类型	                                  含义
+  // route	        ComputedRef<RouteLocationResolved>	  解析后的目标路由
+  // href	          ComputedRef<string>	                  转换后的链接地址，等价于 router.resolve(to).href
+  // isActive	      ComputedRef<boolean>	                当前路由是否“模糊激活”（前缀匹配）
+  // isExactActive	ComputedRef<boolean>	                当前路由是否“精确激活”
+  // navigate(e?)	  方法	                                  触发跳转行为（支持点击事件传入）
   route: ComputedRef<RouteLocationResolved<Name>>
   href: ComputedRef<string>
   isActive: ComputedRef<boolean>
@@ -142,6 +177,10 @@ export interface UseLinkReturn<Name extends keyof RouteMap = keyof RouteMap> {
 export function useLink<Name extends keyof RouteMap = keyof RouteMap>(
   props: UseLinkOptions<Name>
 ): UseLinkReturn<Name> {
+  // 1. 解析目标 route
+  // router.resolve() 会将 to 转换成标准的 RouteLocationResolved
+  // 支持 ref/reactive
+  // 包含 .href, .matched, .params, .name 等信息
   const router = inject(routerKey)!
   const currentRoute = inject(routeLocationKey)!
 
@@ -152,6 +191,7 @@ export function useLink<Name extends keyof RouteMap = keyof RouteMap>(
     const to = unref(props.to)
 
     if (__DEV__ && (!hasPrevious || to !== previousTo)) {
+      // 还带开发环境检查：
       if (!isRouteLocation(to)) {
         if (hasPrevious) {
           warn(
@@ -179,12 +219,15 @@ export function useLink<Name extends keyof RouteMap = keyof RouteMap>(
     return router.resolve(to)
   })
 
+  // 2. 激活状态判断
   const activeRecordIndex = computed<number>(() => {
     const { matched } = route.value
     const { length } = matched
     const routeMatched: RouteRecord | undefined = matched[length - 1]
     const currentMatched = currentRoute.matched
     if (!routeMatched || !currentMatched.length) return -1
+    // 当前激活路由中是否包含 route.value 的路由记录（matched[] 中的项）
+    // 若未命中，则考虑“嵌套路由的空子路径”等情况，再次回退匹配上层 route。
     const index = currentMatched.findIndex(
       isSameRouteRecord.bind(null, routeMatched)
     )
@@ -209,11 +252,15 @@ export function useLink<Name extends keyof RouteMap = keyof RouteMap>(
     )
   })
 
+  // 匹配成功（记录存在）
+  // 并且 params 包含（不要求完全相等）
   const isActive = computed<boolean>(
     () =>
       activeRecordIndex.value > -1 &&
       includesParams(currentRoute.params, route.value.params)
   )
+
+  // 完全匹配路由记录 & params 完全一致 → 精确激活
   const isExactActive = computed<boolean>(
     () =>
       activeRecordIndex.value > -1 &&
@@ -221,6 +268,10 @@ export function useLink<Name extends keyof RouteMap = keyof RouteMap>(
       isSameRouteLocationParams(currentRoute.params, route.value.params)
   )
 
+  // 3. 路由跳转函数 navigate
+  // 拦截点击事件（guardEvent()）
+  // 执行 router.push() 或 router.replace()
+  // 可选启用视图过渡动画（viewTransition）
   function navigate(
     e: MouseEvent = {} as MouseEvent
   ): Promise<void | NavigationFailure> {
@@ -242,9 +293,14 @@ export function useLink<Name extends keyof RouteMap = keyof RouteMap>(
   }
 
   // devtools only
+  // 4. devtools 支持（开发调试）
   if ((__DEV__ || __FEATURE_PROD_DEVTOOLS__) && isBrowser) {
     const instance = getCurrentInstance()
     if (instance) {
+      // 提供：
+      // 当前解析的目标 route
+      // 是否激活 / 精确激活
+      // to 是否非法（如不是字符串/对象）
       const linkContextDevtools: UseLinkDevtoolsContext = {
         route: route.value,
         isActive: isActive.value,
@@ -280,15 +336,35 @@ export function useLink<Name extends keyof RouteMap = keyof RouteMap>(
     isExactActive,
     navigate,
   }
+
+  // 实际使用场景
+
+  // 使用场景 1：自定义导航组件（button、div）
+  // const { href, isActive, navigate } = useLink({ to: '/profile' })
+  // 在模板中：
+  // <button :class="{ active: isActive }" @click="navigate">Go</button>
+
+  // 使用场景 2：构建扩展型 <RouterLink>
+  // 这是 <RouterLink> 内部的关键依赖。它只需负责渲染逻辑，而 useLink() 提供所有行为。
 }
 
 function preferSingleVNode(vnodes: VNode[]) {
   return vnodes.length === 1 ? vnodes[0] : vnodes
 }
 
+// 利用 useLink() 实现了导航行为、href 计算、激活状态判断，并通过 custom 支持插槽自定义渲染。
 export const RouterLinkImpl = /*#__PURE__*/ defineComponent({
   name: 'RouterLink',
   compatConfig: { MODE: 3 },
+  // 1. 定义 props
+  // 这些 props 全都在前面 RouterLinkProps 类型中定义过，功能包括：
+  // 属性	用途
+  // to	跳转地址（字符串或对象）
+  // replace	是否使用 router.replace()
+  // activeClass	当前路由模糊匹配时应用的 class
+  // exactActiveClass	当前路由完全匹配时的 class
+  // custom	是否使用插槽自定义渲染
+  // ariaCurrentValue	为可访问性设置 aria-current 值（默认 'page'）
   props: {
     to: {
       type: [String, Object] as PropType<RouteLocationRaw>,
@@ -308,9 +384,18 @@ export const RouterLinkImpl = /*#__PURE__*/ defineComponent({
   useLink,
 
   setup(props, { slots }) {
+    // 2. 使用 useLink() 实现核心逻辑
+    // 这会提供以下响应式属性（详见你之前贴的 useLink）：
+    // link.href
+    // link.route
+    // link.navigate
+    // link.isActive
+    // link.isExactActive
     const link = reactive(useLink(props))
     const { options } = inject(routerKey)!
 
+    // 3. 计算 class（激活状态）
+    // 通过 router.options.linkActiveClass 传入全局默认值，也支持组件级别 activeClass、exactActiveClass。
     const elClass = computed(() => ({
       [getLinkClass(
         props.activeClass,
@@ -329,6 +414,11 @@ export const RouterLinkImpl = /*#__PURE__*/ defineComponent({
       )]: link.isExactActive,
     }))
 
+    // 4. 渲染函数
+    // 普通渲染模式（custom: false）：
+    // 渲染为 <a> 标签，附带 class、href、click handler
+    // 自定义渲染模式（custom: true）：
+    // 只调用插槽并返回内容，交由用户自定义渲染结构（通常结合 v-slot 使用）
     return () => {
       const children = slots.default && preferSingleVNode(slots.default(link))
       return props.custom
@@ -349,6 +439,11 @@ export const RouterLinkImpl = /*#__PURE__*/ defineComponent({
           )
     }
   },
+  // 插槽使用示例（custom 模式）
+  // <router-link to="/user" custom v-slot="{ href, navigate, isActive }">
+  //   <button :class="{ active: isActive }" @click="navigate">{{ href }}</button>
+  // </router-link>
+  // useLink() 让这些 slot 参数变得非常清晰可控。
 })
 
 // export the public type for h/tsx inference
@@ -356,6 +451,9 @@ export const RouterLinkImpl = /*#__PURE__*/ defineComponent({
 /**
  * Component to render a link that triggers a navigation on click.
  */
+// 这里将 RouterLinkImpl 强制转换成 _RouterLinkI，是为了支持更强类型推断（特别是 JSX、TSX 中）：
+// 为 RouterLink 提供 IDE 和类型系统友好的接口提示
+// 暴露 RouterLink.useLink() 作为静态方法（内部用）
 export const RouterLink: _RouterLinkI = RouterLinkImpl as any
 
 /**
@@ -391,6 +489,15 @@ export interface _RouterLinkI {
   useLink: typeof useLink
 }
 
+
+// 拦截不该跳转的点击事件
+// 这是 <a @click> 中最重要的行为保护器：
+// 不跳转的场景	原因
+// 按下 Ctrl/Meta/Alt/Shift	用户想打开新标签
+// e.preventDefault() 已被调用	外部阻止跳转
+// 鼠标右键	用户想打开菜单
+// target="_blank"	用户显式要求新开标签页
+// 最后会调用 e.preventDefault() 防止默认 <a> 跳转。
 function guardEvent(e: MouseEvent) {
   // don't redirect with control keys
   if (e.metaKey || e.altKey || e.ctrlKey || e.shiftKey) return
@@ -411,10 +518,15 @@ function guardEvent(e: MouseEvent) {
   return true
 }
 
+// 是否包含目标参数
 function includesParams(
   outer: RouteLocation['params'],
   inner: RouteLocation['params']
 ): boolean {
+  // 这是判断 isActive 时用于比对 params 的工具函数：
+  // 字符串直接比对
+  // 数组必须元素一致（顺序也要相同）
+  // 用于模糊匹配（只要目标参数被包含即可）。
   for (const key in inner) {
     const innerValue = inner[key]
     const outerValue = outer[key]
@@ -437,6 +549,8 @@ function includesParams(
  * Get the original path value of a record by following its aliasOf
  * @param record
  */
+// 获取真实路径
+// 当存在 alias（别名路由）时，返回真实路径：
 function getOriginalPath(record: RouteRecord | undefined): string {
   return record ? (record.aliasOf ? record.aliasOf.path : record.path) : ''
 }
@@ -447,6 +561,11 @@ function getOriginalPath(record: RouteRecord | undefined): string {
  * @param globalClass
  * @param defaultClass
  */
+// 激活类名的决策逻辑
+// 顺序如下：
+// 使用组件 prop 显式传入的 class
+// 使用 router 的全局默认 class
+// 使用硬编码的 fallback（如 'router-link-active'）
 const getLinkClass = (
   propClass: string | undefined,
   globalClass: string | undefined,

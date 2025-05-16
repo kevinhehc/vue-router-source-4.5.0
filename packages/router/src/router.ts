@@ -70,6 +70,13 @@ import { _LiteralUnion } from './types/utils'
 import { RouteLocationAsRelativeTyped } from './typed-routes/route-location'
 import { RouteMap } from './typed-routes/route-map'
 
+// Router 是 Vue Router 的核心实例，管理：
+// 当前路由状态（currentRoute）
+// 页面跳转（push, replace, back, go）
+// 路由记录（addRoute, removeRoute, getRoutes）
+// 路由解析（resolve）
+// 导航守卫（beforeEach, beforeResolve, afterEach, onError）
+// 初始导航与 SSR 支持（isReady, install）
 /**
  * Internal type to define an ErrorHandler
  *
@@ -194,6 +201,10 @@ export interface Router {
   /**
    * Current {@link RouteLocationNormalized}
    */
+  // 1. 当前路由状态
+  // 响应式 Ref
+  // 等价于 useRoute() 的返回值
+  // 包含 path, name, params, query, matched 等
   readonly currentRoute: Ref<RouteLocationNormalizedLoaded>
   /**
    * Original options object passed to create the Router
@@ -211,6 +222,7 @@ export interface Router {
    * @param parentName - Parent Route Record where `route` should be appended at
    * @param route - Route Record to add
    */
+  // 向已有路由下添加子路由
   addRoute(
     // NOTE: it could be `keyof RouteMap` but the point of dynamic routes is not knowing the routes at build
     parentName: NonNullable<RouteRecordNameGeneric>,
@@ -221,27 +233,32 @@ export interface Router {
    *
    * @param route - Route Record to add
    */
+  // 动态添加一个路由
   addRoute(route: RouteRecordRaw): () => void
   /**
    * Remove an existing route by its name.
    *
    * @param name - Name of the route to remove
    */
+  // 根据路由名移除
   removeRoute(name: NonNullable<RouteRecordNameGeneric>): void
   /**
    * Checks if a route with a given name exists
    *
    * @param name - Name of the route to check
    */
+  // 是否存在某个命名路由
   hasRoute(name: NonNullable<RouteRecordNameGeneric>): boolean
   /**
    * Get a full list of all the {@link RouteRecord | route records}.
    */
+  // 获取全部路由记录
   getRoutes(): RouteRecord[]
 
   /**
    * Delete all routes from the router matcher.
    */
+  // 清空所有路由记录（内部用）
   clearRoutes(): void
 
   /**
@@ -253,6 +270,11 @@ export interface Router {
    * @param to - Raw route location to resolve
    * @param currentLocation - Optional current location to resolve against
    */
+  // 返回一个 标准化路由对象，包含：
+  // .href：最终跳转链接
+  // .matched：匹配的路由记录
+  // .params, .query 等
+  // 常用于 <router-link> 或自定义跳转逻辑
   resolve<Name extends keyof RouteMap = keyof RouteMap>(
     to: RouteLocationAsRelativeTyped<RouteMap, Name>,
     // NOTE: This version doesn't work probably because it infers the type too early
@@ -271,6 +293,7 @@ export interface Router {
    *
    * @param to - Route location to navigate to
    */
+  // 像 <router-link> 一样跳转，添加历史记录
   push(to: RouteLocationRaw): Promise<NavigationFailure | void | undefined>
 
   /**
@@ -279,17 +302,20 @@ export interface Router {
    *
    * @param to - Route location to navigate to
    */
+  // 跳转但替换当前记录，不添加历史记录
   replace(to: RouteLocationRaw): Promise<NavigationFailure | void | undefined>
 
   /**
    * Go back in history if possible by calling `history.back()`. Equivalent to
    * `router.go(-1)`.
    */
+  // 回退一页（go(-1))
   back(): ReturnType<Router['go']>
   /**
    * Go forward in history if possible by calling `history.forward()`.
    * Equivalent to `router.go(1)`.
    */
+  // 前进一页（go(1))
   forward(): ReturnType<Router['go']>
   /**
    * Allows you to move forward or backward through the history. Calls
@@ -298,6 +324,7 @@ export interface Router {
    * @param delta - The position in the history to which you want to move,
    * relative to the current page
    */
+  // 类似浏览器的 history.go(n)
   go(delta: number): void
 
   /**
@@ -306,6 +333,7 @@ export interface Router {
    *
    * @param guard - navigation guard to add
    */
+  // 所有导航前
   beforeEach(guard: NavigationGuardWithThis<undefined>): () => void
   /**
    * Add a navigation guard that executes before navigation is about to be
@@ -324,6 +352,7 @@ export interface Router {
    * ```
    *
    */
+  // 所有导航确认前（所有组件解析完）
   beforeResolve(guard: NavigationGuardWithThis<undefined>): () => void
 
   /**
@@ -342,6 +371,7 @@ export interface Router {
    * })
    * ```
    */
+  // 所有导航后（无论成功失败）
   afterEach(guard: NavigationHookAfter): () => void
 
   /**
@@ -353,6 +383,7 @@ export interface Router {
    *
    * @param handler - error handler to register
    */
+  // 捕捉导航中出现的任何错误（同步/异步）
   onError(handler: _ErrorListener): () => void
   /**
    * Returns a Promise that resolves when the router has completed the initial
@@ -365,6 +396,10 @@ export interface Router {
    * push the initial location while on client side, the router automatically
    * picks it up from the URL.
    */
+  // 6. 初始导航与 SSR 支持
+  // 返回 Promise<void>
+  // 在初次导航完成后 resolve（组件加载、守卫触发都完成）
+  // 常用于 SSR 或手动挂载前等待路由准备好
   isReady(): Promise<void>
 
   /**
@@ -374,6 +409,9 @@ export interface Router {
    * @internal
    * @param app - Application that uses the router
    */
+  // 7. 安装到应用（由 app.use(router) 触发）
+  // 通常不手动调用
+  // 内部执行路由初始化 & 注册全局组件
   install(app: App): void
 }
 
@@ -456,6 +494,12 @@ export function createRouter(options: RouterOptions): Router {
     return !!matcher.getRecordMatcher(name)
   }
 
+  // 3. 路由匹配和解析
+  // 返回一个 标准化路由对象，包含：
+  // .href：最终跳转链接
+  // .matched：匹配的路由记录
+  // .params, .query 等
+  // 常用于 <router-link> 或自定义跳转逻辑。
   function resolve(
     rawLocation: RouteLocationRaw,
     currentLocation?: RouteLocationNormalizedLoaded
