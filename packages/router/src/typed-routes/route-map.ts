@@ -6,6 +6,8 @@ import type {
 } from '../types'
 import type { RouteRecord } from '../matcher/types'
 
+// 路由 map 定义
+
 /**
  * Helper type to define a Typed `RouteRecord`
  * @see {@link RouteRecord}

@@ -32,7 +32,7 @@ import { warn } from './warning'
 import { isSameRouteRecord } from './location'
 
 export interface RouterViewProps {
-  // 用于指定命名视图（named view）
+  // 用于指定命名视图（named view ）
   // 对应 <router-view name="sidebar" /> 的 name 属性
   // 匹配 routes[*].components[name]
   name?: string

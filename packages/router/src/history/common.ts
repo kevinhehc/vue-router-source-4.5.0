@@ -1,7 +1,7 @@
 import { isBrowser } from '../utils'
 import { removeTrailingSlash } from '../location'
 
-// 表示当前的 URL（如字符串 '/about'）
+// 表示当前的 URL（如字符串 '/about' ）
 export type HistoryLocation = string
 /**
  * Allowed variables in HTML5 history state. Note that pushState clones the state

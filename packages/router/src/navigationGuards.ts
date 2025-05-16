@@ -23,6 +23,7 @@ import { RouteRecordNormalized } from './matcher/types'
 import { isESModule, isRouteComponent } from './utils'
 import { warn } from './warning'
 
+// 为指定的路由记录添加导航守卫，并在组件卸载或失活时自动清除。
 function registerGuard(
   record: RouteRecordNormalized,
   name: 'leaveGuards' | 'updateGuards',
@@ -41,6 +42,11 @@ function registerGuard(
 
   record[name].add(guard)
 }
+
+// onBeforeRouteLeave / onBeforeRouteUpdate
+// 这两个 API 用于在组件中注册导航守卫（beforeRouteLeave / beforeRouteUpdate）：
+// 它们基于 inject(matchedRouteKey) 获取当前所在的 RouteRecordNormalized。
+// 然后调用 registerGuard()，将守卫函数加到记录的对应集合中。
 
 /**
  * Add a navigation guard that triggers whenever the component for the current
@@ -106,6 +112,14 @@ export function onBeforeRouteUpdate(updateGuard: NavigationGuard) {
   registerGuard(activeRecord, 'updateGuards', updateGuard)
 }
 
+// 将导航守卫函数封装为 返回 Promise 的函数，并处理各种类型的返回值：
+// false → 中断导航（NavigationFailure）
+// Error → 抛出
+// RouteLocationRaw → 重定向
+// Function → 仅 beforeRouteEnter 时注册为 enterCallback
+// 支持异步和同步守卫
+// 支持开发时警告（如重复调用 next()）
+// 这使得路由守卫可以通过 runGuardQueue([...]) 统一处理。
 export function guardToPromiseFn(
   guard: NavigationGuard,
   to: RouteLocationNormalized,
@@ -230,6 +244,11 @@ function canOnlyBeCalledOnce(
 
 type GuardType = 'beforeRouteEnter' | 'beforeRouteUpdate' | 'beforeRouteLeave'
 
+// 用于从 RouteRecordNormalized[] 中提取某类守卫（如 beforeRouteLeave），支持：
+// 同步组件：直接读取组件 options
+// 异步组件（函数）：
+// 预解析组件（调用并缓存 components[name] = resolved）
+// 提取其守卫逻辑
 export function extractComponentsGuards(
   matched: RouteRecordNormalized[],
   guardType: GuardType,
@@ -350,6 +369,7 @@ export function extractComponentsGuards(
  *
  * @param route - resolved route to load
  */
+// 确保所有组件异步加载完成后，返回一个 RouteLocationNormalizedLoaded
 export function loadRouteLocation(
   route: RouteLocation | RouteLocationNormalized
 ): Promise<RouteLocationNormalizedLoaded> {

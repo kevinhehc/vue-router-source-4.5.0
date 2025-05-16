@@ -3,6 +3,8 @@ import type { RouteLocationNormalizedLoaded } from './typed-routes'
 import { RouteRecordNormalized } from './matcher/types'
 import type { Router } from './router'
 
+// symbols 定义
+
 /**
  * RouteRecord being rendered by the closest ancestor Router View. Used for
  * `onBeforeRouteUpdate` and `onBeforeRouteLeave`. rvlm stands for Router View

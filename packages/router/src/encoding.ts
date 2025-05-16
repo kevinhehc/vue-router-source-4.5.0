@@ -1,5 +1,7 @@
 import { warn } from './warning'
 
+// 编码
+
 /**
  * Encoding Rules (␣ = Space)
  * - Path: ␣ " < > # ? { }

@@ -1,5 +1,7 @@
 import type { RouteLocationRaw, RouteRecordNameGeneric } from '../typed-routes'
 
+// 类型判断
+
 export function isRouteLocation(route: any): route is RouteLocationRaw {
   return typeof route === 'string' || (route && typeof route === 'object')
 }

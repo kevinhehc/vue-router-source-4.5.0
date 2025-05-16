@@ -1,3 +1,5 @@
+// 类型定义
+
 /**
  * Creates a union type that still allows autocompletion for strings.
  * @internal

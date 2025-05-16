@@ -8,6 +8,7 @@ import { tokenizePath } from './pathTokenizer'
 import { warn } from '../warning'
 import { assign } from '../utils'
 
+// createRouteRecordMatcher 核心逻辑
 export interface RouteRecordMatcher extends PathParser {
   record: RouteRecord
   parent: RouteRecordMatcher | undefined

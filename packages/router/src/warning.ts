@@ -1,3 +1,4 @@
+// 封装打印
 export function warn(msg: string, ..._args: any[]): void
 export function warn(msg: string): void {
   // avoid using ...args as it breaks in older Edge builds

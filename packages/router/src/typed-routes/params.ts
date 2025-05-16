@@ -1,5 +1,7 @@
 import type { RouteMap } from './route-map'
 
+// 参数类型定义
+
 /**
  * Utility type for raw and non raw params like :id+
  *

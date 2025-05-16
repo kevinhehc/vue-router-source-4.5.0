@@ -1,6 +1,22 @@
 import { Token, TokenType } from './pathTokenizer'
 import { assign, isArray } from '../utils'
 
+
+// const parser = tokensToParser(tokenizePath('/user/:id(\\d+)?'))
+// parser.re        // 生成的 RegExp
+// parser.parse('/user/42') // => { id: '42' }
+// parser.stringify({ id: 42 }) // => '/user/42'
+
+// 假设你有以下两个路由：
+// /user/static
+// /user/:slug
+// 两者都能匹配 /user/static，谁更优先？
+// 就靠 score 来排：
+// /user/static → Static token → score 高
+// /user/:slug → Param token → score 低
+// 这样 router.match() 才能选中优先级最高的匹配路径。
+
+
 export type PathParams = Record<string, string | string[]>
 
 /**

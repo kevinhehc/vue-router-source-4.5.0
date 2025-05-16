@@ -37,7 +37,7 @@ export function createWebHashHistory(base?: string): RouterHistory {
   // 如果当前是浏览器环境（location.host 存在）：
   // 优先使用用户传入的 base
   // 否则 fallback 为当前页面的 pathname + search
-  // 在 file:// 协议下（如移动 App、Electron）使用空 base
+  // 在 file:// 协议下（如移动 App、Electron）使用空  base
   base = location.host ? base || location.pathname + location.search : ''
   // allow the user to provide a `#` in the middle: `/base/#/app`
   // 确保最终的 base 包含 #，因为这是 hash 路由的关键标记位。

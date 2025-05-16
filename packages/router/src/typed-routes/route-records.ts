@@ -5,6 +5,8 @@ import type {
 } from './route-location'
 import type { RouteMap, RouteMapGeneric } from './route-map'
 
+// 路由record 类型定义
+
 /**
  * @internal
  */

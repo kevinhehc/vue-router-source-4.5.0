@@ -14,18 +14,23 @@ import { isArray } from './utils'
  *
  * @internal
  */
+// null 表示参数存在但无值（如 ?foo）
+// '' 表示空值（如 ?bar=）
+// 'baz' 表示正常值（如 ?key=baz）
 export type LocationQueryValue = string | null
 /**
  * Possible values when defining a query.
  *
  * @internal
  */
+// 用于用户传入的 query 类型。包含 undefined，但 undefined 会在处理时被去除。
 export type LocationQueryValueRaw = LocationQueryValue | number | undefined
 /**
  * Normalized query object that appears in {@link RouteLocationNormalized}
  *
  * @public
  */
+// 最终规范化后（供 Vue Router 内部使用）的查询对象。
 export type LocationQuery = Record<
   string,
   LocationQueryValue | LocationQueryValue[]
@@ -51,6 +56,12 @@ export type LocationQueryRaw = Record<
  * @param search - search string to parse
  * @returns a query object
  */
+// 将查询字符串转为对象（?a=1&b&c=3 → { a: "1", b: null, c: "3" }）
+// 核心逻辑：
+// 允许传入带 ? 开头的字符串
+// 将 + 解码为空格
+// 解码键值（decodeURIComponent）
+// 支持同名参数合并为数组（如 ?a=1&a=2 → { a: ["1", "2"] }）
 export function parseQuery(search: string): LocationQuery {
   const query: LocationQuery = {}
   // avoid creating an object with an empty key and empty value
@@ -90,6 +101,14 @@ export function parseQuery(search: string): LocationQuery {
  * @param query - query object to stringify
  * @returns string version of the query without the leading `?`
  */
+// 将对象转为查询字符串（反向过程）
+// 核心逻辑：
+// 忽略 undefined
+// null → ?key（无等号）
+// 空字符串或值 → ?key=value
+// 多值数组支持重复键（a=1&a=2）
+// { a: 1, b: null, c: ['x', null, undefined] }
+// → 'a=1&b&c=x&c'
 export function stringifyQuery(query: LocationQueryRaw): string {
   let search = ''
   for (let key in query) {
@@ -129,6 +148,13 @@ export function stringifyQuery(query: LocationQueryRaw): string {
  * @param query - query object to normalize
  * @returns a normalized query object
  */
+// 对用户传入的 query 做规范化处理，转换为 LocationQuery
+// 特点：
+// number → string
+// undefined → 删除
+// 数组中 undefined → null（确保一致性）
+// { a: 1, b: undefined, c: [2, null, undefined] }
+// → { a: "1", c: ["2", null, null] }
 export function normalizeQuery(
   query: LocationQueryRaw | undefined
 ): LocationQuery {

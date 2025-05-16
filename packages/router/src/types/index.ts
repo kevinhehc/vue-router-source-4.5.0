@@ -12,6 +12,8 @@ import type {
 } from '../typed-routes'
 import type { _Awaitable } from './utils'
 
+// 类型定义
+
 export type Lazy<T> = () => Promise<T>
 export type Override<T, U> = Pick<T, Exclude<keyof T, keyof U>> & U
 
@@ -334,6 +336,85 @@ export interface RouteRecordMultipleViewsWithChildren extends _RouteRecordBase {
    */
   props?: Record<string, _RouteRecordProps> | boolean
 }
+
+// 如何渲染这样的路由
+// 假设页面布局如下：
+// <!-- App.vue -->
+// <template>
+//   <router-view name="header" />
+//   <router-view />
+//   <router-view name="footer" />
+// </template>
+// 你可以把这个看作主页面有三个区域：顶部、默认区域、底部。
+//
+// 示例一：配置 RouteRecordMultipleViewsWithChildren
+// const routes: RouteRecordRaw[] = [
+//   {
+//     path: '/dashboard',
+//     components: {
+//       header: HeaderComponent,
+//       default: DashboardMain,
+//       footer: FooterComponent,
+//     },
+//     props: {
+//       header: true,
+//       default: true,
+//       footer: false,
+//     },
+//     children: [
+//       {
+//         path: 'stats',
+//         component: StatsComponent,
+//       },
+//       {
+//         path: 'reports',
+//         component: ReportsComponent,
+//       },
+//     ],
+//   },
+// ]
+// 渲染逻辑解释
+// 当访问 /dashboard 时：
+// HeaderComponent 会渲染在 <router-view name="header" />
+// DashboardMain 会渲染在默认的 <router-view />
+// FooterComponent 会渲染在 <router-view name="footer" />
+// 当访问 /dashboard/stats 时：
+// 上面三个视图照样渲染
+// StatsComponent 会渲染在 DashboardMain 的 <router-view /> 内部，因为这是子路由的插槽。
+
+
+// 示例二：子路由也使用命名视图
+// const routes: RouteRecordRaw[] = [
+//   {
+//     path: '/admin',
+//     components: {
+//       header: AdminHeader,
+//       default: AdminLayout,
+//     },
+//     children: [
+//       {
+//         path: 'users',
+//         components: {
+//           default: UserList,
+//           sidebar: UserSidebar,
+//         },
+//       },
+//     ],
+//   },
+// ]
+// 同时，假设 AdminLayout.vue 是：
+// <template>
+//   <router-view />
+//   <router-view name="sidebar" />
+// </template>
+// 访问 /admin/users：
+
+// 外层命名视图：
+// AdminHeader → <router-view name="header" />
+// AdminLayout → <router-view />
+// 内层命名视图（在 AdminLayout 中）：
+// UserList → <router-view />（默认）
+// UserSidebar → <router-view name="sidebar" />
 
 /**
  * Route Record that defines a redirect. Cannot have `component` or `components`

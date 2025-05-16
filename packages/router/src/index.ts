@@ -1,3 +1,4 @@
+// 导出定义
 export { createWebHistory } from './history/html5'
 export { createMemoryHistory } from './history/memory'
 export { createWebHashHistory } from './history/hash'

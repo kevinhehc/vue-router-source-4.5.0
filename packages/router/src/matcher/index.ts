@@ -54,12 +54,21 @@ export interface RouterMatcher {
  * @param routes - array of initial routes
  * @param globalOptions - global route options
  */
+// 创建了一个 matcher 对象，用来管理、添加、移除、清空和解析路由规则。最终返回的是一个 RouterMatcher 接口对象，包含：
+// addRoute: 添加路由记录
+// removeRoute: 移除路由记录（按 name 或 matcher 实例）
+// getRoutes: 获取所有当前的匹配器
+// getRecordMatcher: 根据 name 获取匹配器
+// resolve: 将一个 location（path 或 name）解析成包含匹配信息的对象
+// clearRoutes: 清空所有路由
 export function createRouterMatcher(
   routes: Readonly<RouteRecordRaw[]>,
   globalOptions: PathParserOptions
 ): RouterMatcher {
   // normalized ordered array of matchers
+  // matchers: 存储所有路由记录对应的 RouteRecordMatcher，是按匹配优先级排序的数组。
   const matchers: RouteRecordMatcher[] = []
+  // matcherMap: name 到 matcher 的映射表（用于快速查找 named route）。
   const matcherMap = new Map<
     NonNullable<RouteRecordNameGeneric>,
     RouteRecordMatcher
@@ -73,6 +82,14 @@ export function createRouterMatcher(
     return matcherMap.get(name)
   }
 
+  // 规范化 record 成 RouteRecordNormalized。
+  // 如果设置了 alias，生成额外记录。
+  // 若为嵌套路由且 path 非绝对，则拼接父路径。
+  // 创建 matcher（调用 createRouteRecordMatcher，这在源码中是个关键工厂函数）。
+  // 插入 matchers 数组（通过 insertMatcher，会排序）。
+  // 如果是原始 route 且带有 name，写入 matcherMap。
+  // 递归处理 children。
+  // 返回一个用于移除该 route 的函数。
   function addRoute(
     record: RouteRecordRaw,
     parent?: RouteRecordMatcher,
@@ -202,6 +219,9 @@ export function createRouterMatcher(
       : noop
   }
 
+  // 递归移除：
+  // 通过 name 或 matcher 实例删除主 matcher。
+  // 同时删除其 children 和 alias 记录。
   function removeRoute(
     matcherRef: NonNullable<RouteRecordNameGeneric> | RouteRecordMatcher
   ) {
@@ -228,6 +248,10 @@ export function createRouterMatcher(
     return matchers
   }
 
+  // Matcher 插入排序（insertMatcher + findInsertionIndex）
+  // matcher 会按“匹配优先级”排序插入。
+  // 使用二分查找（comparePathParserScore）确定合适位置。
+  // 若 matcher 是某个 matcher 的子路由，优先插入到其父前面。
   function insertMatcher(matcher: RouteRecordMatcher) {
     const index = findInsertionIndex(matcher, matchers)
     matchers.splice(index, 0, matcher)
@@ -236,6 +260,14 @@ export function createRouterMatcher(
       matcherMap.set(matcher.record.name, matcher)
   }
 
+  // 三种情况处理：
+  // name 匹配：通过 matcherMap 取 matcher 并填充参数。
+  // path 匹配：正则匹配 matchers。
+  // fallback：基于当前路由继续导航。
+  // 最终构造：
+  // 匹配记录链（matched）
+  // path、params、name
+  // 合并 meta 字段
   function resolve(
     location: Readonly<MatcherLocationRaw>,
     currentLocation: Readonly<MatcherLocation>

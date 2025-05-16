@@ -2,6 +2,8 @@ import type { MatcherLocationRaw, MatcherLocation } from './types'
 import type { RouteLocationRaw, RouteLocationNormalized } from './typed-routes'
 import { assign } from './utils'
 
+// 异常
+
 /**
  * Flags so we can combine them when checking for multiple errors. This is the internal version of
  * {@link NavigationFailureType}.

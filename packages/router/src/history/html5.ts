@@ -17,6 +17,10 @@ import { warn } from '../warning'
 import { stripBase } from '../location'
 import { assign } from '../utils'
 
+// Vue Router 4 实现 HTML5 history 模式（createWebHistory） 的底层逻辑核心。
+// 它完整封装了 HTML5 的 history.pushState / replaceState / popstate 等 API，并扩展了状态管理、导航监听、滚动位置保存等功能。
+
+
 type PopStateListener = (this: Window, ev: PopStateEvent) => any
 
 let createBaseLocation = () => location.protocol + '//' + location.host
@@ -55,6 +59,9 @@ function createCurrentLocation(
   return path + search + hash
 }
 
+// 负责处理：
+// popstate 监听器 → 用户使用浏览器回退/前进按钮
+// beforeunload 监听器 → 页面刷新/关闭时保存滚动位置
 function useHistoryListeners(
   base: string,
   historyState: ValueContainer<StateEntry>,
@@ -177,6 +184,10 @@ function buildState(
   }
 }
 
+// 封装了 push, replace，并维护当前路径和状态：
+// 管理：当前地址 currentLocation.value
+// 管理：当前历史状态 historyState.value（包括前进、后退位置等）
+// 处理首次加载时手动初始化历史状态（用于 SSR/Hydration）
 function useHistoryStateNavigation(base: string) {
   const { history, location } = window
 
@@ -311,6 +322,11 @@ function useHistoryStateNavigation(base: string) {
  *
  * @param base -
  */
+// 这个函数返回一个符合 RouterHistory 接口的对象，提供了：
+// 当前路径 location、状态 state
+// 跳转 API：push, replace, go
+// 事件监听：listen
+// 销毁方法：destroy
 export function createWebHistory(base?: string): RouterHistory {
   base = normalizeBase(base)
 

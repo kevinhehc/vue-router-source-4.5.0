@@ -8,6 +8,8 @@ import type { TypesConfig } from '../config'
 import type { NavigationFailure } from '../errors'
 import { ComponentPublicInstance } from 'vue'
 
+// 类型定义
+
 /**
  * Return types for a Navigation Guard. Based on `TypesConfig`
  *

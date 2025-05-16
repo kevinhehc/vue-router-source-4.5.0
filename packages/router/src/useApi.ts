@@ -8,6 +8,7 @@ import { RouteLocationNormalizedLoaded } from './typed-routes'
  * Returns the router instance. Equivalent to using `$router` inside
  * templates.
  */
+// 从 Vue 的依赖注入系统中取出路由实例，相当于在模板中使用 $router。
 export function useRouter(): Router {
   return inject(routerKey)!
 }
@@ -16,6 +17,7 @@ export function useRouter(): Router {
  * Returns the current route location. Equivalent to using `$route` inside
  * templates.
  */
+// 返回当前激活的路由对象，相当于在模板中使用 $route。
 export function useRoute<Name extends keyof RouteMap = keyof RouteMap>(
   _name?: Name
 ): RouteLocationNormalizedLoaded<Name> {

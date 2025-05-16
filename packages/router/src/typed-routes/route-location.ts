@@ -13,6 +13,8 @@ import type { Router } from '../router'
 import type { RouteRecord, RouteRecordNormalized } from '../matcher/types'
 import type { RouteRecordNameGeneric } from './route-records'
 
+// 路由Location类型定义
+
 /**
  * Generic version of {@link RouteLocation}. It is used when no {@link RouteMap} is provided.
  */

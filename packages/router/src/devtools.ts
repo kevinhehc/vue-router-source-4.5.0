@@ -19,6 +19,8 @@ import { RouterViewDevtoolsContext } from './RouterView'
 import { assign, isArray } from './utils'
 import { RouteLocationNormalized } from './typed-routes'
 
+// 开发工具
+
 /**
  * Copies a route location and removes any problematic properties that cannot be shown in devtools (e.g. Vue instances).
  *

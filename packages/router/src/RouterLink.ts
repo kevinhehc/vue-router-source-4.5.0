@@ -49,7 +49,7 @@ export interface RouterLinkOptions {
   /**
    * Route Location the link should navigate to when clicked on.
    */
-  // 必填，跳转目标。支持字符串、对象等形式，如：
+  // 必填，跳转目标。支持字符串、对象等形式，如 ：
   // to="/about"
   // to="{ name: 'User', params: { id: 1 } }"
   to: RouteLocationRaw
