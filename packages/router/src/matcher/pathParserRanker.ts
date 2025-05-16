@@ -29,6 +29,10 @@ interface PathParserParamKey {
 }
 
 export interface PathParser {
+  // re: 匹配 path 的正则
+  // keys: 路径中动态参数（如 :id）的元数据
+  // parse(path): 从路径解析出参数
+  // stringify(params): 把参数对象转换为路径
   /**
    * The regexp used to match a url
    */

@@ -474,6 +474,8 @@ export function createRouter(options: RouterOptions): Router {
   // 如果使用了 scrollBehavior（控制页面滚动位置）
   // 将浏览器默认滚动恢复改为 manual，以避免冲突
   if (isBrowser && options.scrollBehavior && 'scrollRestoration' in history) {
+    // "auto"（默认值） 浏览器自动恢复滚动位置，比如按返回键回到上一个页面时，会自动滚动到用户离开页面时的位置。
+    // "manual" 禁用浏览器的自动滚动恢复，你可以手动控制页面滚动位置（比如在路由切换后滚动到顶部、锚点等）。
     history.scrollRestoration = 'manual'
   }
 
