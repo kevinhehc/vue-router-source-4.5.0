@@ -76,6 +76,7 @@ export interface _PathParserOptions {
    *
    * @defaultValue `false`
    */
+  // sensitive: 匹配是否区分大小写
   sensitive?: boolean
 
   /**
@@ -83,6 +84,7 @@ export interface _PathParserOptions {
    *
    * @defaultValue `false`
    */
+  // 是否区分 /foo 和 /foo/（默认 false）
   strict?: boolean
 
   /**
@@ -98,6 +100,7 @@ export interface _PathParserOptions {
    *
    * @defaultValue `true`
    */
+  // 是否精确匹配整条路径（默认 true）
   end?: boolean
 }
 
@@ -118,18 +121,30 @@ const BASE_PATH_PARSER_OPTIONS: Required<_PathParserOptions> = {
 
 // Scoring values used in tokensToParser
 const enum PathScore {
+  // 所有分数都乘以 10 是为了确保小数（比如 bonus）能保留精度。
   _multiplier = 10,
+  //    /	根路径，有最高优先级
   Root = 9 * _multiplier, // just /
+  // /user	标准静态段
   Segment = 4 * _multiplier, // /a-segment
+  // /foo-:id-bar	静态 + 动态组合（子段）
   SubSegment = 3 * _multiplier, // /multiple-:things-in-one-:segment
+  // /static	完整静态段（跟 Segment 相同分数）
   Static = 4 * _multiplier, // /static
+  // 动态参数段
   Dynamic = 2 * _multiplier, // /:someId
+  // 使用了自定义正则，说明更精确
   BonusCustomRegExp = 1 * _multiplier, // /:someId(\\d+)
+  // 通配符降低优先级（抵消上面的正则 Bonus
   BonusWildcard = -4 * _multiplier - BonusCustomRegExp, // /:namedWildcard(.*) we remove the bonus added by the custom regexp
+  // 可重复参数降低优先级
   BonusRepeatable = -2 * _multiplier, // /:w+ or /:w*
+  // 可选参数略降低优先级
   BonusOptional = -0.8 * _multiplier, // /:w? or /:w*
   // these two have to be under 0.1 so a strict /:page is still lower than /:a-:b
+  // 优先考虑启用了 strict 的路径
   BonusStrict = 0.07 * _multiplier, // when options strict: true is passed, as the regex omits \/?
+  // 启用了大小写敏感匹配	略微增加优先级
   BonusCaseSensitive = 0.025 * _multiplier, // when options strict: true is passed, as the regex omits \/?
 }
 

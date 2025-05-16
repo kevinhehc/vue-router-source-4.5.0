@@ -132,10 +132,21 @@ export interface RouterOptions extends PathParserOptions {
    * })
    * ```
    */
+  // 路由的导航方式（如 HTML5 History、Hash History）
+  // 常用工厂函数：
+  // createWebHistory() → 使用 HTML5 的 history.pushState()，需要服务器配置支持
+  // createWebHashHistory() → 使用 # 方式，无需服务器支持
+  // createMemoryHistory() → 用于 SSR 或测试环境
   history: RouterHistory
   /**
    * Initial list of routes that should be added to the router.
    */
+  // 路由记录的数组
+  // [
+  //   { path: '/', component: Home },
+  //   { path: '/about', component: About }
+  // ]
+  // 这部分内容在内部会被 createRouterMatcher() 标准化并构建 matcher。
   routes: Readonly<RouteRecordRaw[]>
   /**
    * Function to control scrolling when navigating between pages. Can return a
@@ -149,6 +160,9 @@ export interface RouterOptions extends PathParserOptions {
    * }
    * ```
    */
+  // 控制页面导航后的滚动行为（支持返回 Promise）
+  // 当配合 history.scrollRestoration = 'manual' 使用时，浏览器不会自动滚动，需你手动处理。
+  // 支持返回 x/y/top/left/selector 等形式，或 null。
   scrollBehavior?: RouterScrollBehavior
   /**
    * Custom implementation to parse a query. See its counterpart,
@@ -167,21 +181,31 @@ export interface RouterOptions extends PathParserOptions {
    * })
    * ```
    */
+  // 自定义解析 URL 查询字符串的方法。
+  // 默认是 Vue Router 内置的 originalParseQuery，你可以替换成如 qs.parse：
+  // import qs from 'qs'
+  // parseQuery: qs.parse
   parseQuery?: typeof originalParseQuery
   /**
    * Custom implementation to stringify a query object. Should not prepend a leading `?`.
    * {@link RouterOptions.parseQuery | parseQuery} counterpart to handle query parsing.
    */
+  // 自定义将对象转换为查询字符串的方法。
+  // 配合 parseQuery 使用，如：
+  // stringifyQuery: qs.stringify
+  // 注意：返回的字符串不能带前导 ?，Vue Router 会自动加。
   stringifyQuery?: typeof originalStringifyQuery
   /**
    * Default class applied to active {@link RouterLink}. If none is provided,
    * `router-link-active` will be applied.
    */
+  // RouterLink 被匹配时自动添加的类名，默认：router-link-active
   linkActiveClass?: string
   /**
    * Default class applied to exact active {@link RouterLink}. If none is provided,
    * `router-link-exact-active` will be applied.
    */
+  // RouterLink 严格匹配时添加的类名，默认：router-link-exact-active
   linkExactActiveClass?: string
   /**
    * Default class applied to non-active {@link RouterLink}. If none is provided,
